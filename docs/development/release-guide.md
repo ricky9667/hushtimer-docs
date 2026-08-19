@@ -1,0 +1,245 @@
+# Release Guide
+
+This guide describes the manual release process for HUSH Timer. Only read this guide if you are the owner or admin that is authorized to prompt a release.
+
+## Context
+
+Release metadata is intentionally owned by Gradle and the generated release-note
+task. [Fastlane](https://fastlane.tools/) only builds and uploads artifacts.
+
+- `gradle.properties`
+    - `appVersionName`: user-visible version, for example `1.3.0`
+    - `appBuildNumber`: monotonically increasing build number/version code
+    - `buildkonfig.flavor`: keep committed as `debug`
+- `release-notes.yml`
+    - newest release first
+    - latest `version` and `build` must match `gradle.properties`
+    - `en-US` release notes are required
+- Generated files
+    - `composeApp/src/commonMain/kotlin/com/rickyhu/hushtimer/core/domain/ChangelogData.kt`
+    - `androidApp/src/main/play/release-notes/<locale>/default.txt`
+    - `androidApp/src/main/play/release-notes/<locale>/internal.txt`
+    - `iosApp/Versions.xcconfig`
+
+Android, iOS, JVM desktop packaging, and in-app BuildKonfig all read from the
+same version properties.
+
+---
+
+## Required local setup
+
+Install Ruby dependencies with Bundler:
+
+```bash
+bundle install
+```
+
+Put local-only release credentials in `fastlane/.env`. This file is ignored and
+must never be committed.
+
+### Google Play credentials
+
+Create a Google Cloud service account with access to the app in Play Console,
+then put the service account JSON contents in:
+
+```bash
+SUPPLY_JSON_KEY_DATA='{"type":"service_account",...}'
+```
+
+The service account must have the Play Console permissions needed to upload to
+Internal testing and, if used, promote releases to production.
+
+### App Store Connect credentials
+
+Create an App Store Connect API key from App Store Connect > Users and Access >
+Integrations. Store these values in `fastlane/.env`:
+
+```bash
+APP_STORE_CONNECT_API_KEY_ID=...
+APP_STORE_CONNECT_ISSUER_ID=...
+APP_STORE_CONNECT_API_KEY_CONTENT="-----BEGIN PRIVATE KEY-----
+...
+-----END PRIVATE KEY-----"
+```
+
+---
+
+## Prepare a release PR
+
+**1. Create or switch to the release branch, for example:**
+
+```bash
+git switch -c release/1.4.0
+```
+
+**2. Update `gradle.properties`:**
+
+```properties
+appVersionName=1.4.0
+appBuildNumber=10
+buildkonfig.flavor=debug
+```
+
+Notes:
+
+- Increment `appBuildNumber` by exactly 1.
+- Do not change `buildkonfig.flavor` to `release`, it will be done with a fastlane command line argument.
+
+**3. Add the new release to the top of `release-notes.yml`:**
+
+```yaml
+releases:
+    - version: 1.4.0
+    build: 10
+    changes:
+        en-US:
+        - Add the first user-facing change
+        - Add the second user-facing change
+```
+
+**4. Regenerate release outputs:**
+
+```bash
+bundle exec fastlane prepare_release
+```
+
+*This runs:*
+
+```bash
+./gradlew generateReleaseNotes :composeApp:generateIosVersionsXcConfig
+```
+
+**5. Test the app**
+
+Test build debug for both Android and iOS, then create a pull request for the release. Name the branch as `release/...` and create a PR like [this](https://github.com/ricky9667/HushTimer/pull/145).
+
+After publishing the apps to the test channel, wait for some time (about 1 week) for internal testers to verify the new version. Then, publish the apps to the production channel, and merge the release PR after the apps are released.
+
+---
+
+## Publish the app
+
+### Android release
+
+**1. Build the Play Store Android App Bundle:**
+
+```bash
+bundle exec fastlane android build_release
+```
+
+*This runs the release build with:*
+
+```bash
+./gradlew :androidApp:bundleRelease -Pbuildkonfig.flavor=release
+```
+
+*The AAB is written to:*
+
+```text
+androidApp/build/outputs/bundle/release/androidApp-release.aab
+```
+
+**2. Validate the Play upload without publishing:**
+
+```bash
+bundle exec fastlane android validate_internal
+```
+
+**3. Upload to Google Play Internal testing:**
+
+```bash
+bundle exec fastlane android upload_internal
+```
+
+**4. Promote the current Internal testing release to production only after manual approval:**
+
+```bash
+bundle exec fastlane android promote_internal_to_production
+```
+
+### iOS release
+
+**1. Build the App Store IPA:**
+
+```bash
+bundle exec fastlane ios build_release
+```
+
+*This runs `xcodebuild archive` and `xcodebuild -exportArchive` directly, using:*
+
+```text
+fastlane/ExportOptions.plist
+```
+
+*The IPA is written under:*
+
+```text
+build/fastlane/ios/
+```
+
+**2. Upload the IPA to TestFlight:**
+
+```bash
+bundle exec fastlane ios upload_testflight
+```
+
+**3. Create or update the App Store version metadata without submitting for review:**
+
+```bash
+bundle exec fastlane ios prepare_app_store
+```
+
+**4. Submit the app manually**
+
+Submit for App Store review manually in App Store Connect until a separate, explicitly approved submission lane exists.
+
+---
+
+## Useful commands
+
+⭐ Pro tip: set `alias fastlane="bundle exec fastlane"` to shorten your commands in the future.
+
+List lanes and select:
+
+```bash
+bundle exec fastlane
+```
+
+List available lanes:
+
+```bash
+bundle exec fastlane lanes
+```
+
+Prepare generated release files:
+
+```bash
+bundle exec fastlane prepare_release
+```
+
+Build Android release AAB:
+
+```bash
+bundle exec fastlane android build_release
+```
+
+Build iOS release IPA:
+
+```bash
+bundle exec fastlane ios build_release
+```
+
+---
+
+## Safety rules
+
+- Never commit `buildkonfig.flavor=release`.
+- Never commit `fastlane/.env`, JSON keys, `.p8` keys, provisioning profiles, or
+  signing certificates.
+- Do not upload to stores, promote to production, submit App Store review, push,
+  or create PRs unless that action is explicitly requested.
+- Keep `gradle.properties` and the latest `release-notes.yml` entry in sync.
+- Use `android validate_internal` before `android upload_internal` when changing
+  Fastlane configuration or Play credentials.
+- Keep production promotion and App Store review submission as manual approval
+  steps.
