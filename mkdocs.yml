@@ -1,0 +1,29 @@
+site_name: HUSH Timer Docs
+site_description: "Documentation for HUSH Timer app."
+site_url: https://docs.hushtimer.app/
+
+theme:
+    name: material
+    font:
+        text: Poppins
+        code: Space Mono
+    palette:
+        - scheme: default
+          toggle:
+              icon: material/brightness-7
+              name: Dark mode
+        - scheme: slate
+          toggle:
+              icon: material/brightness-4
+              name: Light mode
+    logo: assets/icon.png
+    favicon: assets/icon.png
+
+extra:
+    social:
+        - icon: fontawesome/brands/instagram
+          link: https://instagram.com/hush_cubing_apps
+          name: HUSH Cubing Apps on Instagram
+        - icon: fontawesome/brands/discord
+          link: https://discord.gg/GjfMKprt7q
+          name: Join HUSH Cubing Apps on Discord
