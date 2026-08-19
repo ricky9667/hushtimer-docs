@@ -1,17 +1,21 @@
-# Welcome to MkDocs
+# Welcome
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+Welcome to the documentation page of [HUSH Timer](https://hushtimer.app)!
 
-## Commands
+HUSH Timer is a 1v1 Cubing Timer with modern and useful features:
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+- Responsive portrait/landscape layouts
+- Keeps your session history of your battles
+- Customize your battle screen in settings
+- And many more in the future!
 
-## Project layout
+## Where to start
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+- Read the Development section if you are contributing to HUSH Timer.
+- Read the Testing section if you are testing internally for HUSH Timer.
+
+## Links
+
+- Join our [Discord](https://discord.gg/GjfMKprt7q) to discuss
+- Follow our [Instagram](https://instagram.com/hush_cubing_apps) to get new updates.
+- Support the developer on [Buy me a coffee](https://coff.ee/ricky9667) if you like our work.
