@@ -8,6 +8,8 @@ nav:
           - "Getting Started": development/getting-started.md
           - "Troubleshooting": development/troubleshooting.md
           - "Release Guide": development/release-guide.md
+    - Testing:
+          - "Testing Guide": testing/testing-guide.md
 
 theme:
     name: material
@@ -34,3 +36,6 @@ extra:
         - icon: fontawesome/brands/discord
           link: https://discord.gg/GjfMKprt7q
           name: Join HUSH Cubing Apps on Discord
+
+markdown_extensions:
+    - pymdownx.details
