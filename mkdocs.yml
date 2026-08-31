@@ -7,6 +7,7 @@ nav:
     - Development:
           - "Getting Started": development/getting-started.md
           - "Troubleshooting": development/troubleshooting.md
+          - "Useful Tools": development/useful-tools.md
           - "Release Guide": development/release-guide.md
     - Testing:
           - "Testing Guide": testing/testing-guide.md

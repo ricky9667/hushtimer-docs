@@ -92,7 +92,7 @@ For example:
     - `ci`: CI configuration.
     - `chore`: Misc (e.g., .gitignore).
 
-You can use tools such as [git-cz](https://github.com/streamich/git-cz) (which we mainly use), the Oh My Zsh [git-commit](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git-commit) plugin, or anything you prefer.
+You can use tools such as [git-cz](https://github.com/streamich/git-cz), the Oh My Zsh [git-commit](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git-commit) plugin, or anything you prefer.
 
 ### Linting
 
