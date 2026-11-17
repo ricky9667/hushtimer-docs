@@ -1,0 +1,168 @@
+# Agent Workflow
+
+This page explains how we build HUSH Timer features with coding agents, from the first idea to a merged pull request. Read [Getting Started](getting-started.md) first.
+
+The workflow uses Claude Code. Codex reads the same project rules, but it cannot tap the iOS simulator, so some checks only work in Claude Code.
+
+## How it works
+
+1. You discuss the feature with the agent until the spec is clear.
+2. The agent writes the code.
+3. The agent runs the real app on an Android emulator and an iOS simulator, and saves screenshots as proof.
+4. The agent reviews its own change and opens a pull request. The screenshots appear in the pull request description.
+5. You review the pull request and merge it.
+
+The rules the agent follows are in the HUSH Timer repository:
+
+- `AGENTS.md` lists the project rules and links to the guides in `docs/agents/`.
+- `docs/agents/workflow.md` has the rules for commits, validation and pull requests.
+- `.agents/skills/verify-hushtimer/` teaches the agent to drive the app and capture evidence.
+- `scripts/open-pr.sh` opens the pull request and uploads the screenshots.
+
+If an agent gets something wrong, fix these files. Do not repeat the same correction in every chat.
+
+---
+
+## One-time setup
+
+Do these steps once on each computer.
+
+### 1. Install the skills
+
+In Claude Code, add the pstack plugin:
+
+```text
+/plugin marketplace add cursor/plugins
+/plugin install pstack@cursor-plugins
+```
+
+Install the Matt Pocock skills by following the README in [mattpocock/skills](https://github.com/mattpocock/skills). We use `grill-with-docs`, `to-tickets` and `code-review` from that set.
+
+### 2. Choose the agent models
+
+Run this once in Claude Code:
+
+```text
+/pstack:setup-pstack
+```
+
+It asks for a budget and saves your choice to `~/.claude/rules/pstack-models.md`. The `medium` budget is enough for most work. Run it again when a new model comes out or you want to change the cost.
+
+### 3. Add the local keys
+
+The agent needs these keys in `local.properties` to build and run the app. Ask the owner for the values.
+
+```text
+sdk.dir=...
+CONFIGCAT_KEY_TEST=...
+SUPABASE_URL=...
+SUPABASE_KEY=...
+REVENUECAT_TEST_SDK_KEY=...
+```
+
+Never commit `local.properties`. If you work in a git worktree, copy the file into the worktree.
+
+### 4. Create the Android emulator
+
+The agent uses its own emulator, so it does not touch your data. Create it once:
+
+```bash
+echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n hushtimer-verify \
+  -k "system-images;android-36;google_apis_playstore;arm64-v8a" -d pixel_9_pro
+```
+
+For iOS, boot any iPhone simulator in Xcode before you ask the agent to verify a change.
+
+---
+
+## Build a feature
+
+### 1. Clarify the spec
+
+Start a new chat in the HUSH Timer repository and run:
+
+```text
+/grill-with-docs
+```
+
+Then describe the feature. The agent asks questions one at a time until the behavior is clear. It also updates `CONTEXT.md` and the ADRs in `docs/adr/` when you agree on a term or a decision.
+
+This step does not create a ticket.
+
+### 2. Create tickets, only for large features
+
+If the feature needs more than one pull request, run `/to-tickets`. The agent splits the work into Linear tickets. Start a new chat for each ticket.
+
+If the feature fits in one pull request, skip this step and continue in the same chat. The agent still remembers what you agreed on.
+
+### 3. Implement
+
+Ask the agent to build the feature in poteto mode. Say how it should prove the change:
+
+```text
+/pstack:poteto-mode implement HUSH-12 as we discussed.
+Prove it with verify-hushtimer on Android and iOS: before and after
+screenshots of each changed screen, mapped to the requirements.
+```
+
+The agent then writes the code, runs the Gradle checks, runs the app, and saves the screenshots in `.verify-artifacts/` in the repository. That folder is ignored by git.
+
+### 4. Review
+
+Before the pull request, ask for a review in a fresh context:
+
+```text
+/code-review
+```
+
+The review checks the change against the ticket and against the guides in `docs/agents/`. The agent fixes what it finds and runs the checks again.
+
+### 5. Open the pull request
+
+Ask the agent to open a pull request. It does these steps:
+
+1. It writes the description from the pull request template.
+2. It runs `./gradlew :composeApp:check`.
+3. It runs `scripts/open-pr.sh` with the screenshots folder.
+
+The script checks the branch name, pushes the branch and opens the pull request against `master`. CI starts right away. If you turn on auto-fix in Claude Code, the agent fixes failed CI checks and review comments for you.
+
+The branch name must look like `feat/HUSH-12/session-share` or `chore/update-gradle`. See [Getting Started](getting-started.md#version-control).
+
+---
+
+## Screenshots in pull requests
+
+For a change to the app's UI, the pull request shows:
+
+- before and after screenshots of each changed screen, on Android and iOS
+- links to screen recordings and to the text dump of each Android screen
+- a list that matches each requirement to its screenshot
+- the checks the agent could not run, marked as unverified
+
+Pull requests that only change code or docs have no screenshots.
+
+The script uploads the files to the `pr-assets` branch, in a folder named after your branch. Do not delete or rewrite `pr-assets`. Merged pull requests link to its commits, and their images break without it.
+
+---
+
+## Known limits
+
+- **Starting a timer on Android.** A timer starts only when both players touch the screen at the same time, and the Android tools cannot do that. The agent proves solves on iOS instead, and marks Android as unverified.
+- **iOS taps in Codex.** Only Claude Code can tap the iOS simulator. Codex can build the iOS app and take screenshots, but it needs a person for taps.
+- **The iOS test link.** `./gradlew :composeApp:check` can fail with `framework 'TNoodle' not found`. If the change does not touch iOS or scrambles, the agent reruns the check without the iOS test tasks and reports both results.
+- **Remote flags.** Login and Pro features depend on flags from ConfigCat. They can be missing on the first launch of a new emulator. Relaunch the app once.
+
+---
+
+## When the agent keeps making a mistake
+
+If you correct the same mistake twice, run:
+
+```text
+/pstack:correct
+```
+
+It turns the correction into a check that runs on its own, such as a lint rule or a test. That works better than another line in `AGENTS.md`.
+
+Every few weeks, run `/pstack:maintain-verification-skill`. It checks that the `verify-hushtimer` steps still match the app.
