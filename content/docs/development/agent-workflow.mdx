@@ -1,6 +1,8 @@
-# Agent Workflow
+---
+title: Agent Workflow
+---
 
-This page explains how we build HUSH Timer features with coding agents, from the first idea to a merged pull request. Read [Getting Started](getting-started.md) first.
+This page explains how we build HUSH Timer features with coding agents, from the first idea to a merged pull request. Read [Getting Started](./getting-started.mdx) first.
 
 The workflow uses Claude Code. Codex reads the same project rules, but it cannot tap the iOS simulator, so some checks only work in Claude Code.
 
@@ -127,7 +129,7 @@ Ask the agent to open a pull request. It does these steps:
 
 The script checks the branch name, pushes the branch and opens the pull request against `master`. CI starts right away. If you turn on auto-fix in Claude Code, the agent fixes failed CI checks and review comments for you.
 
-The branch name must look like `feat/HUSH-12/session-share` or `chore/update-gradle`. See [Getting Started](getting-started.md#version-control).
+The branch name must look like `feat/HUSH-12/session-share` or `chore/update-gradle`. See [Getting Started](./getting-started.mdx#version-control).
 
 ---
 
