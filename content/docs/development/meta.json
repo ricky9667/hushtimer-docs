@@ -1,0 +1,5 @@
+{
+  "title": "Development",
+  "defaultOpen": true,
+  "pages": ["getting-started", "troubleshooting", "useful-tools", "agent-workflow", "release-guide"]
+}

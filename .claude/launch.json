@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "docs",
+      "runtimeExecutable": "bunx",
+      "runtimeArgs": ["serve", "out", "-l", "4173"],
+      "port": 4173
+    },
+    {
+      "name": "dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    }
+  ]
+}
